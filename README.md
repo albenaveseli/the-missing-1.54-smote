@@ -31,14 +31,26 @@ E njëjta të dhënë, i njëjti model (Random Forest) dhe i njëjti SMOTE, por 
 | Ndarja train/test | Recall (Upset) pa SMOTE | Recall (Upset) me SMOTE | Çfarë tregon |
 |---|---|---|---|
 | **A. Rastësore** (si në shumicën e tutorialëve) | 0.83 | **0.95** | Iluzion: 93% e rreshtave të testit kanë një "binjak" në train nga e njëjta seancë |
-| **C. Person i ri** (seanca 16 jashtë trajnimit) | 0.00 | **0.00** | SMOTE nuk mund të krijojë diversitet që nuk ekziston |
+| **C. Seancë e re** (seanca 16 jashtë trajnimit) | 0.00 | **0.00** | SMOTE nuk mund të krijojë diversitet që nuk ekziston |
 | **D. Kronologjike** (70% e parë e çdo seance në train) | 0.22 | 0.29 | Recall rritet pak, por precision bie nga 0.48 në 0.18 dhe Macro F1 bie |
 
 ![Rezultatet](images/rezultatet.png)
 
-**Pse dështon te personi i ri?** SMOTE interpolon vetëm mes pikave që ekzistojnë. Pikat sintetike (me gjelbër) mbushin zonën e personave të njohur, ndërsa Upset-i i personit të ri (me vjollcë) ndodhet krejt diku tjetër:
+**Pse dështon te seanca e re?** SMOTE interpolon vetëm mes pikave që ekzistojnë. Pikat sintetike (me gjelbër) mbushin zonën e seancave të njohura, ndërsa Upset-i i seancës së re (me vjollcë) ndodhet krejt diku tjetër:
 
-![Person i ri](images/person_i_ri.png)
+![Seancë e re](images/seanca_e_re.png)
+
+### A janë të qëndrueshme rezultatet?
+
+Çdo rast u përsërit me ndarje të ndryshme: 5 ndarje rastësore, secila seancë me Upset jashtë trajnimit, dhe 5 pragje kronologjike (60–80%). Çdo ndarje u testua pa SMOTE dhe me SMOTE.
+
+| Ndarja | Recall (Upset) pa → me SMOTE | Precision (Upset) pa → me SMOTE | Macro F1 pa → me SMOTE |
+|---|---|---|---|
+| A. Rastësore (5×) | 0.84 ± 0.02 → 0.95 ± 0.01 | 0.94 ± 0.01 → 0.77 ± 0.01 | 0.936 → 0.923 |
+| C. Seancë e re (seancat 16, 18) | 0.00 → 0.00 | 0.00 → 0.00 | 0.205 → 0.198 |
+| D. Kronologjike (5 pragje) | 0.10 ± 0.09 → 0.13 ± 0.12 | 0.38 ± 0.23 → 0.08 ± 0.07 | 0.489 → 0.465 |
+
+Pragu 70%, i përdorur në analizën kryesore, rezultoi **rasti më i favorshëm për SMOTE**. Në 12 ndarjet e përsëritura, SMOTE e rriti Macro F1 vetëm **një herë**.
 
 ## Çfarë përmban notebook-u
 
@@ -51,10 +63,12 @@ E njëjta të dhënë, i njëjti model (Random Forest) dhe i njëjti SMOTE, por 
 | 2 | **Rasti A:** ndarje rastësore. Shpërndarja e klasave, PCA dhe matricat e konfuzionit para dhe pas SMOTE |
 | 2b | **SMOTE nën mikroskop:** 8 vizualizime të mekanizmit mbi të dhënat reale |
 | 3 | **Rasti B:** pse rezultati i rastit A është iluzion (analiza e fqinjëve në kohë) |
-| 4 | **Rasti C:** testi i ndershëm me një person të ri |
+| 4 | **Rasti C:** testi i ndershëm me një seancë të re |
 | 5 | **Rasti D:** ndarje kronologjike brenda seancave |
 | 6 | **Rasti E:** SMOTE kundrejt Random Oversampling dhe `class_weight`, si dhe efekti i `k` |
-| 7 | Përfundimet |
+| 7 | **Qëndrueshmëria:** përsëritje me 12 ndarje të ndryshme, mesatare ± devijim standard |
+| 8 | Kufizimet |
+| 9 | Përfundimet |
 
 ### SMOTE nën mikroskop
 
@@ -76,6 +90,14 @@ E njëjta të dhënë, i njëjti model (Random Forest) dhe i njëjti SMOTE, por 
 1. SMOTE aplikohet **vetëm në train**, gjithmonë pas ndarjes.
 2. Ndarja train/test duhet të pasqyrojë përdorimin real (persona, seanca, kohë), jo rreshta të rastësishëm.
 3. Para SMOTE, pyet: **nga sa burime të pavarura vjen pakica?** Nëse vjen nga 1–2, problemi nuk zgjidhet me më shumë rreshta sintetikë, por me më shumë të dhëna reale.
+
+## Kufizimet
+
+- Dataset-i nuk ka identifikues për pjesëmarrësit. Seancat janë rindërtuar nga kolona e kohës, dhe i njëjti person mund të ketë më shumë se një seancë.
+- Çdo rresht (0.25 s) trajtohet si mostër. Nuk janë nxjerrë veçori nga dritare kohore (p.sh. HRV, mesatarja e EDA), qëllimisht, që fokusi të mbetej te SMOTE.
+- Përshkrimet e klasave vijnë nga përshkrimi i dataset-it, jo nga protokolli i plotë i etiketimit.
+- Është përdorur vetëm një model (Random Forest).
+- `smote.py` llogarit matricën e plotë të distancave, gjë që mjafton për ~1 000 mostra të pakicës.
 
 ## Struktura
 
